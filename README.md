@@ -49,17 +49,15 @@ public function getWechatAuthorize()
     if ($this->_wechatAuthorize == null) {
         $this->_wechatAuthorize = new WechatAuthorize([
             'wechat' => \Yii::$app->get('wechat')->getApp(),
-            'userType' => 'USER',
         ]);
     }
     
     return $this->_wechatAuthorize;
 }
 
-$this->_wechatUser = $this->getWechatAuthorize()->getWechatUser();
-
-if ($this->_wechatUser == null) {
-    return $this->getWechatAuthorize()->authorizeRequired();
+if (Wechat::getIsWechatClient() 
+    && $this->getWechatAuthorize()->authorizeRequired()) {
+        $this->_wechatUser = $this->getWechatAuthorize()->getWechatUser();
 }
 ```
 

@@ -76,8 +76,6 @@ class WechatAuthorize extends Component
             return $this->authorizeProcess($code, $scope);
         }
 
-        $wechatUser = null;
-
         $wechatOpenId = \Yii::$app->getSession()->get($this->sessionKey, '');
 
         if (empty($wechatOpenId)) {
