@@ -1,0 +1,27 @@
+{
+  "name": "huijiewei/yii2-wechat",
+  "description": "微信扩展",
+  "type": "yii2-extension",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Huijie Wei",
+      "email": "huijiewei@outlook.com"
+    }
+  ],
+  "require": {
+    "yiisoft/yii2": "~2.0",
+    "overtrue/wechat": "~4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "huijiewei\\wechat\\": "src"
+    }
+  },
+  "repositories": {
+    "asset": {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  }
+}
