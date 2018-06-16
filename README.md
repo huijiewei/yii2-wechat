@@ -32,7 +32,7 @@ composer require huijiewei/yii2-wechat
 
 ## 配置数据库
 ```bash
-php yii migrate --migrationPath=@vendor/huijiewei/yii2-wechat/migrations
+php yii migrate --migrationPath=@vendor/huijiewei/yii2-wechat/src/migrations
 ```
 
 ## 用法
