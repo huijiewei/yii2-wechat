@@ -28,6 +28,7 @@ class WechatAuthorize extends Component
 
     private $_appId = false;
     private $_wechatUser = null;
+    private $_authorizeScope = null;
 
     /**
      * @throws InvalidConfigException
@@ -63,6 +64,36 @@ class WechatAuthorize extends Component
         return $this->_wechatUser;
     }
 
+    public function isAuthorized()
+    {
+        if ($this->_wechatUser != null) {
+            return true;
+        }
+
+        $wechatOpenId = \Yii::$app->getSession()->get($this->sessionKey, '');
+
+        if (empty($wechatOpenId)) {
+            $this->_authorizeScope = static::SNSAPI_BASE;
+
+            return false;
+        }
+
+        $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $wechatOpenId);
+
+        if ($wechatUser == null || $wechatUser->getRefreshTokenIsExpired()) {
+            \Yii::$app->getSession()->remove($this->sessionKey);
+
+            $this->_authorizeScope = static::SNSAPI_USERINFO;
+
+            return false;
+        }
+
+
+        $this->_wechatUser = $wechatUser;
+
+        return true;
+    }
+
     /**
      * @return bool|\yii\web\Response
      * @throws AuthorizeFailedException
@@ -76,23 +107,11 @@ class WechatAuthorize extends Component
             return $this->authorizeProcess($code, $scope);
         }
 
-        $wechatOpenId = \Yii::$app->getSession()->get($this->sessionKey, '');
-
-        if (empty($wechatOpenId)) {
-            return $this->redirectToBaseScope();
+        if ($this->_authorizeScope == null) {
+            throw new AuthorizeFailedException('请先运行 isAuthorized');
         }
 
-        $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $wechatOpenId);
-
-        if ($wechatUser == null || $wechatUser->getRefreshTokenIsExpired()) {
-            \Yii::$app->getSession()->remove($this->sessionKey);
-
-            return $this->redirectToUserInfoScope();
-        }
-
-        $this->_wechatUser = $wechatUser;
-
-        return true;
+        return $this->redirectToScope($this->_authorizeScope);
     }
 
     /**
@@ -119,14 +138,6 @@ class WechatAuthorize extends Component
         } else {
             return $this->processUserInfo($accessToken);
         }
-    }
-
-    /**
-     * @return \yii\web\Response
-     */
-    private function redirectToUserInfoScope()
-    {
-        return $this->redirectToScope(static::SNSAPI_USERINFO);
     }
 
     /**
@@ -183,6 +194,12 @@ class WechatAuthorize extends Component
      */
     private function processUserInfo($accessToken)
     {
+        try {
+            $wechatUserInfo = $this->wechat->oauth->user($accessToken);
+        } catch (\Exception $ex) {
+            throw new AuthorizeFailedException('获取用户资料失败，请重新打开页面。');
+        }
+
         $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $accessToken['openid']);
 
         if ($wechatUser == null) {
@@ -196,27 +213,14 @@ class WechatAuthorize extends Component
         $wechatUser->accessTokenExpiredAt = \Yii::$app->getFormatter()->asDatetime('+' . ($accessToken['expires_in'] - 200) . ' seconds');
         $wechatUser->refreshTokenExpiredAt = \Yii::$app->getFormatter()->asDatetime('+20 days');
 
-        $wechatUser->save(false);
-
-        try {
-            $wechatUserInfo = $this->wechat->oauth->user($accessToken);
-        } catch (\Exception $ex) {
-            throw new AuthorizeFailedException('获取用户资料失败，请重新打开页面。');
-        }
-
-        \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
-
         $wechatUser->nickname = $wechatUserInfo->getNickname();
         $wechatUser->avatar = $wechatUserInfo->getAvatar();
         $wechatUser->details = Json::encode($wechatUserInfo->toArray());
 
         $wechatUser->save(false);
 
-        return $this->redirectToReturnUrl();
-    }
+        \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
 
-    private function redirectToBaseScope()
-    {
-        return $this->redirectToScope(static::SNSAPI_BASE);
+        return $this->redirectToReturnUrl();
     }
 }

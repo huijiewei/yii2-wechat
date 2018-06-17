@@ -1,6 +1,9 @@
 # yii2-wechat
-Yii2 微信扩展 , 基于 [overtrue/wechat](https://github.com/overtrue/wechat).       
+Yii2 微信扩展
 
+本扩展优化了微信网页授权流程
+
+基于 [overtrue/wechat](https://github.com/overtrue/wechat).       
 
 ## 安装
 ```
@@ -39,25 +42,14 @@ php yii migrate --migrationPath=@vendor/huijiewei/yii2-wechat/src/migrations
 
 ##### 微信网页授权:
 ```php
-private $_wechatAuthorize;
-
-/**
- * @return WechatAuthorize
- */
-public function getWechatAuthorize()
-{
-    if ($this->_wechatAuthorize == null) {
-        $this->_wechatAuthorize = new WechatAuthorize([
-            'wechat' => \Yii::$app->get('wechat')->getApp(),
-        ]);
-    }
+if(Wechat::getIsWechatClient()) {
+    $wechatAuthroize = new WechatAuthorize([
+        'wechat' => \Yii::$app->get('wechat')->getApp(),
+    ]);
     
-    return $this->_wechatAuthorize;
-}
-
-if (Wechat::getIsWechatClient() 
-    && $this->getWechatAuthorize()->authorizeRequired()) {
-        $this->_wechatUser = $this->getWechatAuthorize()->getWechatUser();
+    if(!wechatAuthorize()->isAuthorized()) {
+        return $wechatAuthorize()->authorizeRequired()->send();
+    }
 }
 ```
 
