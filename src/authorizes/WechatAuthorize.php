@@ -144,7 +144,7 @@ class WechatAuthorize extends Component
         }
 
         if ($scope != $accessToken['scope']) {
-            return $this->redirectToUserInfoScope();
+            return $this->redirectToScope(static::SNSAPI_USERINFO);
         }
 
         if ($scope == static::SNSAPI_BASE) {
@@ -152,6 +152,26 @@ class WechatAuthorize extends Component
         } else {
             return $this->processUserInfo($accessToken);
         }
+    }
+
+    /**
+     * @param $scope
+     *
+     * @return \yii\web\Response
+     */
+    private function redirectToScope($scope)
+    {
+        return \Yii::$app->getResponse()->redirect($this->getWechat()->oauth->scopes([$scope])->redirect($this->getReturnUrl($scope))->getTargetUrl());
+    }
+
+    /**
+     * @param null|string $scope
+     *
+     * @return string
+     */
+    private function getReturnUrl($scope = null)
+    {
+        return Url::current(['scope' => $scope, 'code' => null, 'state' => null], true);
     }
 
     /**
@@ -164,7 +184,7 @@ class WechatAuthorize extends Component
         $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $accessToken['openid']);
 
         if ($wechatUser == null || $wechatUser->getRefreshTokenIsExpired()) {
-            return $this->redirectToUserInfoScope();
+            return $this->redirectToScope(static::SNSAPI_USERINFO);
         }
 
         \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
@@ -178,16 +198,6 @@ class WechatAuthorize extends Component
     private function redirectToReturnUrl()
     {
         return \Yii::$app->getResponse()->redirect($this->getReturnUrl());
-    }
-
-    /**
-     * @param null|string $scope
-     *
-     * @return string
-     */
-    private function getReturnUrl($scope = null)
-    {
-        return Url::current(['scope' => $scope, 'code' => null, 'state' => null], true);
     }
 
     /**
@@ -226,21 +236,5 @@ class WechatAuthorize extends Component
         \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
 
         return $this->redirectToReturnUrl();
-    }
-
-    /**
-     * @param $scope
-     *
-     * @return \yii\web\Response
-     */
-    private function redirectToScope($scope)
-    {
-        return \Yii::$app->getResponse()->redirect(
-            $this->getWechat()
-                ->oauth
-                ->scopes([$scope])
-                ->redirect($this->getReturnUrl($scope))
-                ->getTargetUrl()
-        );
     }
 }
