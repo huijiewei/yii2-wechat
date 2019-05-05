@@ -30,10 +30,23 @@ abstract class BaseWidget extends Widget
             return;
         }
 
-        $this->getView()->registerJsFile('//res.wx.qq.com/open/js/jweixin-1.2.0.js');
+        $this->getView()->registerJsFile('//res.wx.qq.com/open/js/jweixin-1.4.0.js');
 
         $apiConfig = $this->getWechat()->jssdk->buildConfig([
-            'onMenuShareTimeline', 'onMenuShareAppMessage', 'onMenuShareQQ', 'onMenuShareWeibo', 'onMenuShareQZone', 'startRecord', 'stopRecord', 'onVoiceRecordEnd', 'playVoice', 'pauseVoice', 'stopVoice', 'onVoicePlayEnd', 'uploadVoice', 'downloadVoice', 'chooseImage', 'previewImage', 'uploadImage', 'downloadImage', 'translateVoice', 'getNetworkType', 'openLocation', 'getLocation', 'hideOptionMenu', 'showOptionMenu', 'hideMenuItems', 'showMenuItems', 'hideAllNonBaseMenuItem', 'showAllNonBaseMenuItem', 'closeWindow', 'scanQRCode', 'chooseWXPay', 'openProductSpecificView', 'addCard', 'chooseCard', 'openCard'
+            'onMenuShareTimeline', 'onMenuShareAppMessage',
+            'onMenuShareQQ', 'onMenuShareWeibo', 'onMenuShareQZone',
+            'startRecord', 'stopRecord', 'onVoiceRecordEnd',
+            'playVoice', 'pauseVoice', 'stopVoice',
+            'onVoicePlayEnd', 'uploadVoice', 'downloadVoice',
+            'chooseImage', 'previewImage', 'uploadImage', 'downloadImage',
+            'translateVoice', 'getNetworkType',
+            'openLocation', 'getLocation',
+            'hideOptionMenu', 'showOptionMenu',
+            'hideMenuItems', 'showMenuItems',
+            'hideAllNonBaseMenuItem', 'showAllNonBaseMenuItem',
+            'closeWindow', 'scanQRCode',
+            'chooseWXPay', 'openProductSpecificView',
+            'addCard', 'chooseCard', 'openCard'
         ], $this->debug);
 
         $js = <<<EOD
