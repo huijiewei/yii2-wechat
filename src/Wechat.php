@@ -20,6 +20,7 @@ class Wechat extends Component
     public $miniProgramConfig = [];
     public $openPlatformConfig = [];
     public $workConfig = [];
+
     private $_app;
     private $_payment;
     private $_miniProgram;

@@ -8,6 +8,7 @@
 
 namespace huijiewei\wechat\authorizes;
 
+use EasyWeChat\Factory;
 use EasyWeChat\OfficialAccount\Application;
 use huijiewei\wechat\exceptions\AuthorizeFailedException;
 use huijiewei\wechat\models\WechatUser;
@@ -22,10 +23,11 @@ class WechatAuthorize extends Component
     const SNSAPI_BASE = 'snsapi_base';
     const SNSAPI_USERINFO = 'snsapi_userinfo';
 
-    /* @var $wechat Application */
-    public $wechat;
+    public $wechat = 'wechat';
     public $sessionKey = '';
 
+    /* @var $_wechat Application */
+    private $_wechat = null;
     private $_appId = false;
     private $_wechatUser = null;
     private $_authorizeScope = null;
@@ -37,11 +39,23 @@ class WechatAuthorize extends Component
     {
         parent::init();
 
-        if ($this->wechat == null) {
-            throw new InvalidConfigException('请设置 wechat 属性');
+        if (empty($this->wechat)) {
+            throw new InvalidConfigException('wechat 属性不能为空');
         }
 
         $this->sessionKey = \Yii::$app->id . '_WX_' . $this->getAppId() . '_ID';
+    }
+
+    /**
+     * @return Application|null
+     */
+    public function getWechat()
+    {
+        if ($this->_wechat == null) {
+            $this->_wechat = $this->wechat instanceof Factory ? $this->wechat : \Yii::$app->get($this->wechat)->getApp();
+        }
+
+        return $this->_wechat;
     }
 
     /**
@@ -50,7 +64,7 @@ class WechatAuthorize extends Component
     public function getAppId()
     {
         if ($this->_appId === false) {
-            $this->_appId = $this->wechat->config->get('app_id');
+            $this->_appId = $this->getWechat()->config->get('app_id');
         }
 
         return $this->_appId;

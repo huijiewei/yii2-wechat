@@ -44,7 +44,7 @@ php yii migrate --migrationPath=@vendor/huijiewei/yii2-wechat/src/migrations
 ```php
 if(Wechat::getIsWechatClient()) {
     $wechatAuthroize = new WechatAuthorize([
-        'wechat' => \Yii::$app->get('wechat')->getApp(),
+        'wechat' => 'wechat', // componentId, 默认是 wechat
     ]);
     
     if(!wechatAuthorize()->isAuthorized()) {
