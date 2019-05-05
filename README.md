@@ -43,12 +43,12 @@ php yii migrate --migrationPath=@vendor/huijiewei/yii2-wechat/src/migrations
 ##### 微信网页授权:
 ```php
 if(Wechat::getIsWechatClient()) {
-    $wechatAuthroize = new WechatAuthorize([
+    $wechatAuthorize = new WechatAuthorize([
         'wechat' => 'wechat', // componentId, 默认是 wechat
     ]);
     
-    if(!wechatAuthorize()->isAuthorized()) {
-        return $wechatAuthorize()->authorizeRequired()->send();
+    if(!$wechatAuthorize->isAuthorized()) {
+        return $wechatAuthorize->authorizeRequired()->send();
     }
 }
 ```
