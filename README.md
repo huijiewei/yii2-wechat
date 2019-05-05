@@ -31,7 +31,7 @@ composer require huijiewei/yii2-wechat
 ]
 ```
 
-[配置文档](https://www.easywechat.com/docs/master/zh-CN/official-account/configuration)
+[配置文档](https://www.easywechat.com/docs/4.1/official-account/configuration)
 
 ## 配置数据库
 ```bash
@@ -65,6 +65,6 @@ WechatShareWidget::widget([
 ```
 
 ### 更多文档
-查阅 [EasyWeChat 文档](https://www.easywechat.com/docs/master).
+查阅 [EasyWeChat 文档](https://www.easywechat.com/docs).
 
 感谢 `overtrue/wechat`
