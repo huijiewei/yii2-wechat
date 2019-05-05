@@ -47,18 +47,6 @@ class WechatAuthorize extends Component
     }
 
     /**
-     * @return Application|null
-     */
-    public function getWechat()
-    {
-        if ($this->_wechat == null) {
-            $this->_wechat = $this->wechat instanceof Factory ? $this->wechat : \Yii::$app->get($this->wechat)->getApp();
-        }
-
-        return $this->_wechat;
-    }
-
-    /**
      * @return string
      */
     public function getAppId()
@@ -68,6 +56,18 @@ class WechatAuthorize extends Component
         }
 
         return $this->_appId;
+    }
+
+    /**
+     * @return Application|null
+     */
+    public function getWechat()
+    {
+        if ($this->_wechat == null) {
+            $this->_wechat = $this->wechat instanceof Factory ? $this->wechat : \Yii::$app->get($this->wechat)->getApp();
+        }
+
+        return $this->_wechat;
     }
 
     /**
@@ -138,7 +138,7 @@ class WechatAuthorize extends Component
     private function authorizeProcess($code, $scope)
     {
         try {
-            $accessToken = $this->wechat->oauth->getAccessToken($code);
+            $accessToken = $this->getWechat()->oauth->getAccessToken($code);
         } catch (\Exception $ex) {
             throw new AuthorizeFailedException('微信授权失败，请重新打开页面。');
         }
@@ -152,26 +152,6 @@ class WechatAuthorize extends Component
         } else {
             return $this->processUserInfo($accessToken);
         }
-    }
-
-    /**
-     * @param $scope
-     *
-     * @return \yii\web\Response
-     */
-    private function redirectToScope($scope)
-    {
-        return \Yii::$app->getResponse()->redirect($this->wechat->oauth->scopes([$scope])->redirect($this->getReturnUrl($scope))->getTargetUrl());
-    }
-
-    /**
-     * @param null|string $scope
-     *
-     * @return string
-     */
-    private function getReturnUrl($scope = null)
-    {
-        return Url::current(['scope' => $scope, 'code' => null, 'state' => null], true);
     }
 
     /**
@@ -201,6 +181,16 @@ class WechatAuthorize extends Component
     }
 
     /**
+     * @param null|string $scope
+     *
+     * @return string
+     */
+    private function getReturnUrl($scope = null)
+    {
+        return Url::current(['scope' => $scope, 'code' => null, 'state' => null], true);
+    }
+
+    /**
      * @param $accessToken AccessTokenInterface
      *
      * @return \yii\web\Response
@@ -209,7 +199,7 @@ class WechatAuthorize extends Component
     private function processUserInfo($accessToken)
     {
         try {
-            $wechatUserInfo = $this->wechat->oauth->user($accessToken);
+            $wechatUserInfo = $this->getWechat()->oauth->user($accessToken);
         } catch (\Exception $ex) {
             throw new AuthorizeFailedException('获取用户资料失败，请重新打开页面。');
         }
@@ -236,5 +226,21 @@ class WechatAuthorize extends Component
         \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
 
         return $this->redirectToReturnUrl();
+    }
+
+    /**
+     * @param $scope
+     *
+     * @return \yii\web\Response
+     */
+    private function redirectToScope($scope)
+    {
+        return \Yii::$app->getResponse()->redirect(
+            $this->getWechat()
+                ->oauth
+                ->scopes([$scope])
+                ->redirect($this->getReturnUrl($scope))
+                ->getTargetUrl()
+        );
     }
 }
