@@ -30,6 +30,7 @@ class WechatAuthorize extends Component
     private $_wechat = null;
     private $_appId = false;
     private $_wechatUser = null;
+    private $_wechatOpenId = null;
     private $_authorizeScope = null;
 
     /**
@@ -78,6 +79,38 @@ class WechatAuthorize extends Component
         return $this->_wechatUser;
     }
 
+    /**
+     * @return string|null
+     */
+    public function getWechatOpenId()
+    {
+        return $this->_wechatOpenId;
+    }
+
+    public function isScopeBase()
+    {
+        if ($this->_wechatOpenId != null) {
+            return true;
+        }
+
+        $wechatOpenId = \Yii::$app->getSession()->get($this->sessionKey, '');
+
+        if (empty($wechatOpenId)) {
+            $this->_authorizeScope = static::SNSAPI_BASE;
+
+            return false;
+        }
+
+        $this->_wechatOpenId = $wechatOpenId;
+
+        return true;
+    }
+
+    public function isScopeUserInfo()
+    {
+        return $this->isAuthorized();
+    }
+
     public function isAuthorized()
     {
         if ($this->_wechatUser != null) {
@@ -92,6 +125,8 @@ class WechatAuthorize extends Component
             return false;
         }
 
+        $this->_wechatOpenId = $wechatOpenId;
+
         $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $wechatOpenId);
 
         if ($wechatUser == null || $wechatUser->getRefreshTokenIsExpired()) {
@@ -101,7 +136,6 @@ class WechatAuthorize extends Component
 
             return false;
         }
-
 
         $this->_wechatUser = $wechatUser;
 
