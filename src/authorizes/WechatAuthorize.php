@@ -106,12 +106,12 @@ class WechatAuthorize extends Component
         return true;
     }
 
-    public function isScopeUserInfo()
+    public function isAuthorized()
     {
-        return $this->isAuthorized();
+        return $this->isScopeUserInfo();
     }
 
-    public function isAuthorized()
+    public function isScopeUserInfo()
     {
         if ($this->_wechatUser != null) {
             return true;
