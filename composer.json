@@ -17,11 +17,5 @@
     "psr-4": {
       "huijiewei\\wechat\\": "src"
     }
-  },
-  "repositories": {
-    "asset": {
-      "type": "composer",
-      "url": "https://asset-packagist.org"
-    }
   }
 }
