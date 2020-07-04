@@ -28,8 +28,8 @@ class m180612_023911_create_wechat_user_table extends Migration
             'details' => $this->text()->null()->defaultValue(null),
             'accessToken' => $this->string(100)->notNull()->defaultValue(''),
             'refreshToken' => $this->string(100)->notNull()->defaultValue(''),
-            'accessTokenExpiredAt' => $this->timestamp()->notNull()->defaultValue(0),
-            'refreshTokenExpiredAt' => $this->timestamp()->notNull()->defaultValue(0),
+            'accessTokenExpiredAt' => $this->timestamp()->defaultValue(null),
+            'refreshTokenExpiredAt' => $this->timestamp()->defaultValue(null),
             'createdAt' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP'),
             'updatedAt' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
         ], $tableOptions);
