@@ -9,8 +9,6 @@
 namespace huijiewei\wechat;
 
 use EasyWeChat\Factory;
-use huijiewei\wechat\adapters\CacheAdapter;
-use huijiewei\wechat\adapters\LogAdapter;
 use yii\base\Component;
 
 class Wechat extends Component
@@ -20,15 +18,12 @@ class Wechat extends Component
     public $miniProgramConfig = [];
     public $openPlatformConfig = [];
     public $workConfig = [];
-    public $isProd = false;
 
     private $_app;
     private $_payment;
     private $_miniProgram;
     private $_openPlatform;
     private $_work;
-    private $_cache;
-    private $_log;
 
     /**
      * @return bool
@@ -56,38 +51,7 @@ class Wechat extends Component
      */
     private function mergeConfig($config)
     {
-        $config['cache'] = $this->getCache();
-        $config['log']['default'] = $this->isProd ? 'prod' : 'dev';
-        $config['log']['channels']['dev']['driver'] = $this->getLog();
-        $config['log']['channels']['dev']['level'] = 'debug';
-        $config['log']['channels']['prod']['driver'] = $this->getLog();
-        $config['log']['channels']['dev']['level'] = 'info';
-
         return $config;
-    }
-
-    /**
-     * @return CacheAdapter
-     */
-    private function getCache()
-    {
-        if ($this->_cache == null) {
-            $this->_cache = new CacheAdapter();
-        }
-
-        return $this->_cache;
-    }
-
-    /**
-     * @return LogAdapter
-     */
-    private function getLog()
-    {
-        if ($this->_log == null) {
-            $this->_log = new LogAdapter();
-        }
-
-        return $this->_log;
     }
 
     /**
