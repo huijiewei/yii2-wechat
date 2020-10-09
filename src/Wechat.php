@@ -20,6 +20,7 @@ class Wechat extends Component
     public $miniProgramConfig = [];
     public $openPlatformConfig = [];
     public $workConfig = [];
+    public $isProd = false;
 
     private $_app;
     private $_payment;
@@ -56,7 +57,11 @@ class Wechat extends Component
     private function mergeConfig($config)
     {
         $config['cache'] = $this->getCache();
-        $config['log.default'] = $this->getLog();
+        $config['log']['default'] = $this->isProd ? 'prod' : 'dev';
+        $config['log']['channels']['dev']['driver'] = $this->getLog();
+        $config['log']['channels']['dev']['level'] = 'debug';
+        $config['log']['channels']['prod']['driver'] = $this->getLog();
+        $config['log']['channels']['dev']['level'] = 'info';
 
         return $config;
     }
