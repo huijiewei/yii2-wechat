@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: huijiewei
- * Date: 2018/6/11
- * Time: 14:43
- */
 
 namespace huijiewei\wechat\models;
 
@@ -37,7 +31,7 @@ class WechatUser extends ActiveRecord
      *
      * @return WechatUser|null
      */
-    public static function getWechatUserByOpenId($appId, $openId)
+    public static function getWechatUserByOpenId($appId, $openId): ?WechatUser
     {
         /* @var $wechatUser WechatUser|null */
         $wechatUser = WechatUser::find()
@@ -50,7 +44,7 @@ class WechatUser extends ActiveRecord
     /**
      * @return bool
      */
-    public function getAccessTokenIsExpired()
+    public function getAccessTokenIsExpired(): bool
     {
         return strtotime($this->accessTokenExpiredAt) <= strtotime('now');
     }
@@ -58,7 +52,7 @@ class WechatUser extends ActiveRecord
     /**
      * @return bool
      */
-    public function getRefreshTokenIsExpired()
+    public function getRefreshTokenIsExpired(): bool
     {
         return strtotime($this->refreshTokenExpiredAt) <= strtotime('now');
     }

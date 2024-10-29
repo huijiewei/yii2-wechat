@@ -1,45 +1,45 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: huijiewei
- * Date: 2018/6/11
- * Time: 11:27
- */
 
 namespace huijiewei\wechat;
 
-use EasyWeChat\Factory;
+use EasyWeChat\Kernel\Exceptions\InvalidArgumentException;
+use EasyWeChat\OfficialAccount\Application;
+use EasyWeChat\Pay\Application as PayApplication;
+use EasyWeChat\MiniApp\Application as MiniApplication;
+use EasyWeChat\OpenPlatform\Application as OpenApplication;
+use EasyWeChat\Work\Application as WorkApplication;
 use yii\base\Component;
 
 class Wechat extends Component
 {
-    public $appConfig = [];
-    public $paymentConfig = [];
-    public $miniProgramConfig = [];
-    public $openPlatformConfig = [];
-    public $workConfig = [];
+    public array $appConfig = [];
+    public array $paymentConfig = [];
+    public array $miniProgramConfig = [];
+    public array $openPlatformConfig = [];
+    public array $workConfig = [];
 
-    private $_app;
-    private $_payment;
-    private $_miniProgram;
-    private $_openPlatform;
-    private $_work;
+    private Application|null $_app;
+    private PayApplication|null $_payment;
+    private MiniApplication|null $_miniProgram;
+    private OpenApplication|null $_openPlatform;
+    private WorkApplication|null $_work;
 
     /**
      * @return bool
      */
-    public static function getIsWechatClient()
+    public static function getIsWechatClient(): bool
     {
         return stripos(\Yii::$app->getRequest()->getUserAgent(), 'micromessenger') !== false;
     }
 
     /**
-     * @return \EasyWeChat\OfficialAccount\Application
+     * @return Application
+     * @throws InvalidArgumentException
      */
-    public function getApp()
+    public function getApp(): Application
     {
-        if (!$this->_app instanceof Factory) {
-            $this->_app = Factory::officialAccount($this->mergeConfig($this->appConfig));
+        if (!$this->_app instanceof Application) {
+            $this->_app = new Application($this->mergeConfig($this->appConfig));
         }
 
         return $this->_app;
@@ -49,54 +49,58 @@ class Wechat extends Component
      * @param $config
      * @return array
      */
-    private function mergeConfig($config)
+    private function mergeConfig($config): array
     {
         return $config;
     }
 
     /**
-     * @return \EasyWeChat\Payment\Application
+     * @return PayApplication
+     * @throws InvalidArgumentException
      */
-    public function getPayment()
+    public function getPayment(): PayApplication
     {
-        if (!$this->_payment instanceof Factory) {
-            $this->_payment = Factory::payment($this->mergeConfig($this->paymentConfig));
+        if (!$this->_payment instanceof PayApplication) {
+            $this->_payment = new PayApplication($this->mergeConfig($this->paymentConfig));
         }
 
         return $this->_payment;
     }
 
     /**
-     * @return \EasyWeChat\MiniProgram\Application
+     * @return MiniApplication
+     * @throws InvalidArgumentException
      */
-    public function getMiniProgram()
+    public function getMiniProgram(): MiniApplication
     {
-        if (!$this->_miniProgram instanceof Factory) {
-            $this->_miniProgram = Factory::miniProgram($this->mergeConfig($this->miniProgramConfig));
+        if (!$this->_miniProgram instanceof MiniApplication) {
+            $this->_miniProgram = new MiniApplication($this->mergeConfig($this->miniProgramConfig));
         }
 
         return $this->_miniProgram;
     }
 
     /**
-     * @return \EasyWeChat\OpenPlatform\Application
+     * @return OpenApplication
+     * @throws InvalidArgumentException
      */
-    public function getOpenPlatform()
+    public function getOpenPlatform(): OpenApplication
     {
-        if (!$this->_openPlatform instanceof Factory) {
-            $this->_openPlatform = Factory::openPlatform($this->mergeConfig($this->openPlatformConfig));
+        if (!$this->_openPlatform instanceof OpenApplication) {
+            $this->_openPlatform = new OpenApplication($this->mergeConfig($this->openPlatformConfig));
         }
 
         return $this->_openPlatform;
     }
 
     /**
-     * @return \EasyWeChat\Work\Application
+     * @return WorkApplication
+     * @throws InvalidArgumentException
      */
-    public function getWork()
+    public function getWork(): WorkApplication
     {
-        if (!$this->_work instanceof Factory) {
-            $this->_work = Factory::work($this->mergeConfig($this->workConfig));
+        if (!$this->_work instanceof WorkApplication) {
+            $this->_work = new WorkApplication($this->mergeConfig($this->workConfig));
         }
 
         return $this->_work;

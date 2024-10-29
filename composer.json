@@ -10,12 +10,19 @@
     }
   ],
   "require": {
+    "php": ">=8.0.2",
+    "ext-json": "*",
     "yiisoft/yii2": "^2.0",
-    "overtrue/wechat": "^4.0"
+    "w7corp/easywechat": "^6.7"
   },
   "autoload": {
     "psr-4": {
       "huijiewei\\wechat\\": "src"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true
     }
   }
 }

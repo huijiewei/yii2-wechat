@@ -1,28 +1,39 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: huijiewei
- * Date: 2018/6/11
- * Time: 18:26
- */
 
 namespace huijiewei\wechat\widgets;
 
-use EasyWeChat\Factory;
+use EasyWeChat\Kernel\Exceptions\HttpException;
 use EasyWeChat\OfficialAccount\Application;
 use huijiewei\wechat\Wechat;
+use Psr\SimpleCache\InvalidArgumentException;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Yii;
+use yii\base\InvalidConfigException;
 use yii\base\Widget;
+use yii\helpers\Url;
 use yii\web\View;
 
 abstract class BaseWidget extends Widget
 {
-    public $wechat = 'wechat';
-    public $debug = false;
+    public string|Application $wechat = 'wechat';
+    public bool $debug = false;
+    private Application|null $_wechat;
 
-    /* @var $_wechat Application */
-    private $_wechat;
-
-    public function run()
+    /**
+     * @throws InvalidConfigException
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws InvalidArgumentException
+     * @throws ClientExceptionInterface
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws HttpException
+     */
+    public function run(): void
     {
         parent::run();
 
@@ -30,27 +41,33 @@ abstract class BaseWidget extends Widget
             return;
         }
 
-        $this->getView()->registerJsFile('//res.wx.qq.com/open/js/jweixin-1.4.0.js');
+        $this->getView()->registerJsFile('//res.wx.qq.com/open/js/jweixin-1.6.0.js');
 
-        $apiConfig = $this->getWechat()->jssdk->buildConfig([
-            'onMenuShareTimeline', 'onMenuShareAppMessage',
-            'onMenuShareQQ', 'onMenuShareWeibo', 'onMenuShareQZone',
-            'startRecord', 'stopRecord', 'onVoiceRecordEnd',
-            'playVoice', 'pauseVoice', 'stopVoice',
-            'onVoicePlayEnd', 'uploadVoice', 'downloadVoice',
-            'chooseImage', 'previewImage', 'uploadImage', 'downloadImage',
-            'translateVoice', 'getNetworkType',
-            'openLocation', 'getLocation',
-            'hideOptionMenu', 'showOptionMenu',
-            'hideMenuItems', 'showMenuItems',
-            'hideAllNonBaseMenuItem', 'showAllNonBaseMenuItem',
-            'closeWindow', 'scanQRCode',
-            'chooseWXPay', 'openProductSpecificView',
-            'addCard', 'chooseCard', 'openCard'
-        ], $this->debug);
+        $apiConfig = $this->getWechat()->getUtils()->buildJsSdkConfig(
+            Url::current([], true),
+            [
+                'onMenuShareTimeline', 'onMenuShareAppMessage',
+                'onMenuShareQQ', 'onMenuShareWeibo', 'onMenuShareQZone',
+                'startRecord', 'stopRecord', 'onVoiceRecordEnd',
+                'playVoice', 'pauseVoice', 'stopVoice',
+                'onVoicePlayEnd', 'uploadVoice', 'downloadVoice',
+                'chooseImage', 'previewImage', 'uploadImage', 'downloadImage',
+                'translateVoice', 'getNetworkType',
+                'openLocation', 'getLocation',
+                'hideOptionMenu', 'showOptionMenu',
+                'hideMenuItems', 'showMenuItems',
+                'hideAllNonBaseMenuItem', 'showAllNonBaseMenuItem',
+                'closeWindow', 'scanQRCode',
+                'chooseWXPay', 'openProductSpecificView',
+                'addCard', 'chooseCard', 'openCard'
+            ],
+            [],
+            $this->debug);
+
+        $apiConfigJson = json_encode($apiConfig);
 
         $js = <<<EOD
-    wx.config($apiConfig);
+    wx.config($apiConfigJson);
 EOD;
         $this->getView()->registerJs($js, View::POS_END);
 
@@ -59,11 +76,12 @@ EOD;
 
     /**
      * @return Application|null
+     * @throws InvalidConfigException
      */
-    public function getWechat()
+    public function getWechat(): Application|null
     {
         if ($this->_wechat == null) {
-            $this->_wechat = $this->wechat instanceof Factory ? $this->wechat : \Yii::$app->get($this->wechat)->getApp();
+            $this->_wechat = $this->wechat instanceof Application ? $this->wechat : Yii::$app->get($this->wechat)->getApp();
         }
 
         return $this->_wechat;

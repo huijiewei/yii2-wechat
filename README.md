@@ -3,7 +3,7 @@ Yii2 微信扩展
 
 本扩展优化了微信网页授权流程
 
-基于 [overtrue/wechat](https://github.com/overtrue/wechat).       
+基于 [w7corp/easywechat](https://github.com/w7corp/easywechat).       
 
 ## 安装
 ```
@@ -31,7 +31,7 @@ composer require huijiewei/yii2-wechat
 ]
 ```
 
-[配置文档](https://www.easywechat.com/docs/4.1/official-account/configuration)
+[配置文档](https://easywechat.com/6.x/official-account/config.html)
 
 ## 配置数据库
 ```bash
@@ -67,4 +67,4 @@ WechatShareWidget::widget([
 ### 更多文档
 查阅 [EasyWeChat 文档](https://www.easywechat.com/docs).
 
-感谢 `overtrue/wechat`
+感谢 `w7corp/easywechat`

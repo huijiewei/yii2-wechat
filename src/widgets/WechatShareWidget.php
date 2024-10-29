@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: huijiewei
- * Date: 2018/6/11
- * Time: 19:30
- */
 
 namespace huijiewei\wechat\widgets;
 
@@ -13,15 +7,15 @@ use yii\web\View;
 
 class WechatShareWidget extends WechatJsWidget
 {
-    public $shareUrl = '';
-    public $shareIcon = '';
-    public $shareTitle = '';
-    public $shareDescription = '';
+    public string $shareUrl = '';
+    public string $shareIcon = '';
+    public string $shareTitle = '';
+    public string $shareDescription = '';
 
-    public $shareType = '';
-    public $shareDataUrl = '';
+    public string $shareType = '';
+    public string $shareDataUrl = '';
 
-    public function wechatRun()
+    public function wechatRun(): void
     {
         parent::wechatRun();
 

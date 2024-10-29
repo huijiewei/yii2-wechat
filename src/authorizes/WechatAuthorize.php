@@ -1,42 +1,38 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: huijiewei
- * Date: 2018/6/11
- * Time: 14:46
- */
 
 namespace huijiewei\wechat\authorizes;
 
-use EasyWeChat\Factory;
+use EasyWeChat\Kernel\Exceptions\InvalidArgumentException;
 use EasyWeChat\OfficialAccount\Application;
 use huijiewei\wechat\exceptions\AuthorizeFailedException;
 use huijiewei\wechat\models\WechatUser;
-use Overtrue\Socialite\AccessTokenInterface;
+use Overtrue\Socialite\Contracts\UserInterface;
+use Yii;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
+use yii\base\InvalidRouteException;
+use yii\db\Exception;
 use yii\helpers\Json;
 use yii\helpers\Url;
+use yii\web\Response;
 
 class WechatAuthorize extends Component
 {
     const SNSAPI_BASE = 'snsapi_base';
     const SNSAPI_USERINFO = 'snsapi_userinfo';
 
-    public $wechat = 'wechat';
-    public $sessionKey = '';
-
-    /* @var $_wechat Application */
-    private $_wechat = null;
-    private $_appId = false;
-    private $_wechatUser = null;
-    private $_wechatOpenId = null;
-    private $_authorizeScope = null;
+    public string|Application $wechat = 'wechat';
+    public string $sessionKey = '';
+    private ?Application $_wechat = null;
+    private bool|string $_appId = false;
+    private ?WechatUser $_wechatUser = null;
+    private ?string $_wechatOpenId = null;
+    private ?string $_authorizeScope = null;
 
     /**
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -44,28 +40,30 @@ class WechatAuthorize extends Component
             throw new InvalidConfigException('wechat 属性不能为空');
         }
 
-        $this->sessionKey = \Yii::$app->id . '_WX_' . $this->getAppId() . '_ID';
+        $this->sessionKey = Yii::$app->id . '_WX_' . $this->getAppId() . '_ID';
     }
 
     /**
      * @return string
+     * @throws InvalidConfigException
      */
-    public function getAppId()
+    public function getAppId(): string
     {
         if ($this->_appId === false) {
-            $this->_appId = $this->getWechat()->config->get('app_id');
+            $this->_appId = $this->getWechat()->getConfig()->get('app_id');
         }
 
         return $this->_appId;
     }
 
     /**
-     * @return Application|null
+     * @return Application
+     * @throws InvalidConfigException
      */
-    public function getWechat()
+    public function getWechat(): Application
     {
         if ($this->_wechat == null) {
-            $this->_wechat = $this->wechat instanceof Factory ? $this->wechat : \Yii::$app->get($this->wechat)->getApp();
+            $this->_wechat = $this->wechat instanceof Application ? $this->wechat : Yii::$app->get($this->wechat)->getApp();
         }
 
         return $this->_wechat;
@@ -74,7 +72,7 @@ class WechatAuthorize extends Component
     /**
      * @return null|WechatUser
      */
-    public function getWechatUser()
+    public function getWechatUser(): ?WechatUser
     {
         return $this->_wechatUser;
     }
@@ -82,18 +80,18 @@ class WechatAuthorize extends Component
     /**
      * @return string|null
      */
-    public function getWechatOpenId()
+    public function getWechatOpenId(): ?string
     {
         return $this->_wechatOpenId;
     }
 
-    public function isScopeBase()
+    public function isScopeBase(): bool
     {
         if ($this->_wechatOpenId != null) {
             return true;
         }
 
-        $wechatOpenId = \Yii::$app->getSession()->get($this->sessionKey, '');
+        $wechatOpenId = Yii::$app->getSession()->get($this->sessionKey, '');
 
         if (empty($wechatOpenId)) {
             $this->_authorizeScope = static::SNSAPI_BASE;
@@ -106,18 +104,24 @@ class WechatAuthorize extends Component
         return true;
     }
 
-    public function isAuthorized()
+    /**
+     * @throws InvalidConfigException
+     */
+    public function isAuthorized(): bool
     {
         return $this->isScopeUserInfo();
     }
 
-    public function isScopeUserInfo()
+    /**
+     * @throws InvalidConfigException
+     */
+    public function isScopeUserInfo(): bool
     {
         if ($this->_wechatUser != null) {
             return true;
         }
 
-        $wechatOpenId = \Yii::$app->getSession()->get($this->sessionKey, '');
+        $wechatOpenId = Yii::$app->getSession()->get($this->sessionKey, '');
 
         if (empty($wechatOpenId)) {
             $this->_authorizeScope = static::SNSAPI_BASE;
@@ -130,7 +134,7 @@ class WechatAuthorize extends Component
         $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $wechatOpenId);
 
         if ($wechatUser == null || $wechatUser->getRefreshTokenIsExpired()) {
-            \Yii::$app->getSession()->remove($this->sessionKey);
+            Yii::$app->getSession()->remove($this->sessionKey);
 
             $this->_authorizeScope = static::SNSAPI_USERINFO;
 
@@ -143,13 +147,17 @@ class WechatAuthorize extends Component
     }
 
     /**
-     * @return bool|\yii\web\Response
+     * @return bool|Response
      * @throws AuthorizeFailedException
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws InvalidConfigException
+     * @throws InvalidRouteException
      */
-    public function authorizeRequired()
+    public function authorizeRequired(): Response|bool
     {
-        $code = \Yii::$app->getRequest()->get('code', '');
-        $scope = \Yii::$app->getRequest()->get('scope', '');
+        $code = Yii::$app->getRequest()->get('code', '');
+        $scope = Yii::$app->getRequest()->get('scope', '');
 
         if (!empty($scope) && !empty($code)) {
             return $this->authorizeProcess($code, $scope);
@@ -166,100 +174,114 @@ class WechatAuthorize extends Component
      * @param $code
      * @param $scope
      *
-     * @return \yii\web\Response
+     * @return Response
      * @throws AuthorizeFailedException
+     * @throws InvalidArgumentException
+     * @throws InvalidConfigException
+     * @throws InvalidRouteException|Exception
      */
     private function authorizeProcess($code, $scope)
     {
         try {
-            $accessToken = $this->getWechat()->oauth->getAccessToken($code);
-        } catch (\Exception $ex) {
+            $user = $this->getWechat()->getOAuth()->userFromCode($code);
+        } catch (\Exception) {
             throw new AuthorizeFailedException('微信授权失败，请重新打开页面。');
         }
 
-        if ($scope != $accessToken['scope']) {
-            return $this->redirectToScope(static::SNSAPI_USERINFO);
-        }
-
         if ($scope == static::SNSAPI_BASE) {
-            return $this->processBase($accessToken);
+            return $this->processBase($user);
         } else {
-            return $this->processUserInfo($accessToken);
+            return $this->processUserInfo($user);
         }
     }
 
     /**
-     * @param $scope
+     * @param $scope string
      *
-     * @return \yii\web\Response
+     * @return Response
+     * @throws InvalidConfigException
+     * @throws InvalidArgumentException
+     * @throws InvalidRouteException
      */
-    private function redirectToScope($scope)
+    private function redirectToScope(string $scope): Response
     {
-        return \Yii::$app->getResponse()->redirect($this->getWechat()->oauth->scopes([$scope])->redirect($this->getReturnUrl($scope))->getTargetUrl());
+        $redirectUrl = $this->getWechat()
+            ->getOAuth()
+            ->scopes([$scope])
+            ->redirect($this->getReturnUrl($scope));
+
+        return Yii::$app->getResponse()->redirect($redirectUrl);
     }
 
     /**
-     * @param null|string $scope
+     * @param string|null $scope
      *
      * @return string
      */
-    private function getReturnUrl($scope = null)
+    private function getReturnUrl(string $scope = null): string
     {
         return Url::current(['scope' => $scope, 'code' => null, 'state' => null], true);
     }
 
     /**
-     * @param $accessToken AccessTokenInterface
+     * @param $user UserInterface
      *
-     * @return \yii\web\Response
+     * @return Response
+     * @throws InvalidRouteException
+     * @throws InvalidConfigException
+     * @throws InvalidArgumentException
      */
-    private function processBase($accessToken)
+    private function processBase(UserInterface $user): Response
     {
-        $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $accessToken['openid']);
+        $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $user->getId());
 
         if ($wechatUser == null || $wechatUser->getRefreshTokenIsExpired()) {
             return $this->redirectToScope(static::SNSAPI_USERINFO);
         }
 
-        \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
+        Yii::$app->getSession()->set($this->sessionKey, $user->getId());
 
         return $this->redirectToReturnUrl();
     }
 
     /**
-     * @return \yii\web\Response
+     * @return Response
+     * @throws InvalidRouteException
      */
-    private function redirectToReturnUrl()
+    private function redirectToReturnUrl(): Response
     {
-        return \Yii::$app->getResponse()->redirect($this->getReturnUrl());
+        return Yii::$app->getResponse()->redirect($this->getReturnUrl());
     }
 
     /**
-     * @param $accessToken AccessTokenInterface
+     * @param $user UserInterface
      *
-     * @return \yii\web\Response
+     * @return Response
      * @throws AuthorizeFailedException
+     * @throws InvalidConfigException
+     * @throws InvalidRouteException
+     * @throws Exception
      */
-    private function processUserInfo($accessToken)
+    private function processUserInfo(UserInterface $user): Response
     {
         try {
-            $wechatUserInfo = $this->getWechat()->oauth->user($accessToken);
-        } catch (\Exception $ex) {
+            $wechatUserInfo = $this->getWechat()->getOAuth()->userFromToken($user->getAccessToken());
+        } catch (\Exception) {
             throw new AuthorizeFailedException('获取用户资料失败，请重新打开页面。');
         }
 
-        $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $accessToken['openid']);
+        $wechatUser = WechatUser::getWechatUserByOpenId($this->getAppId(), $user->getId());
 
         if ($wechatUser == null) {
             $wechatUser = new WechatUser();
             $wechatUser->appId = $this->getAppId();
-            $wechatUser->openId = $accessToken['openid'];
+            $wechatUser->openId = $user->getId();
         }
 
-        $wechatUser->accessToken = $accessToken['access_token'];
-        $wechatUser->refreshToken = $accessToken['refresh_token'];
-        $wechatUser->accessTokenExpiredAt = \Yii::$app->getFormatter()->asDatetime('+' . ($accessToken['expires_in'] - 200) . ' seconds');
-        $wechatUser->refreshTokenExpiredAt = \Yii::$app->getFormatter()->asDatetime('+20 days');
+        $wechatUser->accessToken = $user->getAccessToken();
+        $wechatUser->refreshToken = $user->getRefreshToken();
+        $wechatUser->accessTokenExpiredAt = Yii::$app->getFormatter()->asDatetime('+' . ($user->getExpiresIn() - 200) . ' seconds');
+        $wechatUser->refreshTokenExpiredAt = Yii::$app->getFormatter()->asDatetime('+20 days');
 
         $wechatUser->nickname = $wechatUserInfo->getNickname();
         $wechatUser->avatar = $wechatUserInfo->getAvatar();
@@ -267,7 +289,7 @@ class WechatAuthorize extends Component
 
         $wechatUser->save(false);
 
-        \Yii::$app->getSession()->set($this->sessionKey, $accessToken['openid']);
+        Yii::$app->getSession()->set($this->sessionKey, $user->getId());
 
         return $this->redirectToReturnUrl();
     }

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: huijiewei
- * Date: 2018/6/11
- * Time: 18:50
- */
 
 namespace huijiewei\wechat\widgets;
 
@@ -13,13 +7,13 @@ use yii\web\View;
 
 class WechatJsWidget extends BaseWidget
 {
-    public $hideMenuItems = []; //批量隐藏功能按钮接口
-    public $showMenuItems = []; //批量显示功能按钮接口
-    public $hideOptionMenu = false; //隐藏右上角菜单接口
-    public $hideAllNonBaseMenuItem = false; //隐藏所有非基础按钮接口
-    public $showAllNonBaseMenuItem = false; //显示所有功能按钮接口
+    public array $hideMenuItems = []; //批量隐藏功能按钮接口
+    public array $showMenuItems = []; //批量显示功能按钮接口
+    public bool $hideOptionMenu = false; //隐藏右上角菜单接口
+    public bool $hideAllNonBaseMenuItem = false; //隐藏所有非基础按钮接口
+    public bool $showAllNonBaseMenuItem = false; //显示所有功能按钮接口
 
-    public function wechatRun()
+    public function wechatRun(): void
     {
         $hideOptionMenuJs = '';
 
